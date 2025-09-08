@@ -1,1 +1,40 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+while true; do
+clear
+echo "================================================="
+echo "               SSH & OpenVPN "
+echo "================================================="
+echo " 1.  Create SSH & OpenVPN Account"
+echo " 2.  Generate SSH & OpenVPN Trial Account"
+echo " 3.  Extending SSH & OpenVPN Account Active Life"
+echo " 4.  Check User Login SSH & OpenVPN"
+echo " 5.  Daftar Member SSH & OpenVPN"
+echo " 6.  Delete SSH & OpenVpn Account"
+echo " 7.  Delete User Expired SSH & OpenVPN"
+echo " 8.  Set up Autokill SSH"
+echo " 9.  Displays Users Who Do Multi Login SSH"
+echo " 10. Restart All Service"
+echo " 11. Menu Utama"
+echo " 12. Exit"
+echo "-------------------------------------------------"
+read -rp "Select From Options [1-12]: " opt
+
+case $opt in
+   1) create-sshws ;;        # สคริปต์ย่อย: สร้าง user ปกติ
+   2) trial-sshws ;;         # สคริปต์ย่อย: สร้าง trial user
+   3) extend-sshws ;;        # ขยายอายุ
+   4) check-sshws ;;         # เช็ก user ที่ login
+   5) list-sshws ;;          # แสดงรายชื่อผู้ใช้
+   6) del-sshws ;;           # ลบผู้ใช้
+   7) clean-expired-sshws ;; # ลบผู้ใช้หมดอายุ
+   8) autokill-ssh ;;        # ตั้งค่า autokill
+   9) multi-login-ssh ;;     # แสดง multi-login
+   10) systemctl restart ssh && systemctl restart dropbear && systemctl restart stunnel4 ;;
+   11) menu ;;               # กลับเมนูหลัก
+   12) exit 0 ;;
+   *) echo "Invalid option"; sleep 1 ;;
+esac
+done
 
