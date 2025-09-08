@@ -1,1 +1,86 @@
+#!/usr/bin/env bash
+# ==================================================
+#  Auto Script Installer - E2BOX
+# ==================================================
+#  OS : Ubuntu 20.04 / 22.04 (แนะนำ)
+#  Author : E2BOX
+# ==================================================
+
+clear
+echo "========================================"
+echo "   Auto Script VPN Service - E2BOX"
+echo "========================================"
+sleep 2
+
+# --- Basic check ---
+if [[ $EUID -ne 0 ]]; then
+   echo "กรุณารันสคริปต์ด้วย root"
+   exit 1
+fi
+
+# --- Update system ---
+apt update && apt upgrade -y
+apt install -y wget curl git nano screen unzip socat cron lsb-release net-tools
+
+# --- Disable IPv6 (เหมือน Blueblue) ---
+echo 1 > /proc/sys/net/ipv6/conf/all/disable_ipv6
+sed -i '$ a net.ipv6.conf.all.disable_ipv6=1' /etc/sysctl.conf
+sysctl -p
+
+# --- Ask for domain ---
+clear
+read -rp "กรุณาใส่ Domain (เช่น vpn.example.com): " DOMAIN
+echo "$DOMAIN" > /etc/xray/domain
+
+# --- Install Xray (official script) ---
+bash -c "$(curl -L https://github.com/XTLS/Xray-install/raw/main/install-release.sh)" @ install
+
+# --- Install acme.sh + get SSL cert ---
+apt install -y socat
+curl https://get.acme.sh | sh
+~/.acme.sh/acme.sh --set-default-ca --server letsencrypt
+# NOTE: ถ้าใช้ Cloudflare DNS API เพิ่ม config TOKEN ตรงนี้
+~/.acme.sh/acme.sh --issue -d $DOMAIN --standalone -k ec-256
+~/.acme.sh/acme.sh --install-cert -d $DOMAIN \
+    --fullchainpath /etc/xray/xray.crt \
+    --keypath /etc/xray/xray.key --ecc
+
+# --- Install supporting packages ---
+apt install -y dropbear stunnel4 openvpn squid
+
+# --- Setup directories ---
+mkdir -p /etc/xray
+mkdir -p /usr/bin
+mkdir -p /etc/e2box
+
+# --- Download menu + sub-scripts ---
+cd /usr/bin
+wget -q -O menu https://raw.githubusercontent.com/pandasudio/E2box/main/scripts/menu.sh
+wget -q -O add-sshws https://raw.githubusercontent.com/pandasudio/E2box/main/scripts/add-sshws.sh
+wget -q -O create-sshws https://raw.githubusercontent.com/pandasudio/E2box/main/scripts/create-sshws.sh
+chmod +x /usr/bin/*
+
+# --- Setup systemd services (ถ้ายังไม่มี) ---
+systemctl enable ssh
+systemctl enable xray
+systemctl enable dropbear
+systemctl enable stunnel4
+systemctl enable openvpn
+
+# --- Finish ---
+clear
+echo "========================================"
+echo "   Installation Completed - E2BOX"
+echo "========================================"
+echo "Domain     : $DOMAIN"
+echo "SSH Port   : 22"
+echo "WS-HTTP    : 8880"
+echo "WS-SSL     : 443"
+echo "OVPN TCP   : 1194"
+echo "OVPN UDP   : 2200"
+echo "OVPN SSL   : 990"
+echo "Badvpn     : 7100,7200,7300"
+echo "----------------------------------------"
+echo "Run 'menu' to start using the system."
+echo "========================================"
 
