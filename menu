@@ -1,0 +1,96 @@
+#!/usr/bin/env bash
+clear
+
+# --- ANSI Colors ---
+BLUE='\e[36m'
+RED='\e[31m'
+YELLOW='\e[33m'
+NC='\e[0m' # No Color
+
+# --- ฟังก์ชันเช็คสถานะ Service ---
+check_status() {
+  if systemctl is-active --quiet "$1"; then
+    echo -e "${YELLOW}ON${NC} ${BLUE}Running${NC}"
+  else
+    echo -e "${RED}OFF Stopped${NC}"
+  fi
+}
+
+# --- เก็บข้อมูลระบบ (ตัวอย่าง, ดึงจริงจากระบบได้) ---
+OS=$(lsb_release -d | awk -F"\t" '{print $2}')
+RAM_USED=$(free -m | awk 'NR==2{print $3}')
+RAM_TOTAL=$(free -m | awk 'NR==2{print $2}')
+CPU_CORE=$(nproc)
+CPU_USAGE=$(top -bn1 | grep "Cpu(s)" | awk '{print $2 + $4"%"}')
+UPTIME=$(uptime -p | cut -d " " -f 2-)
+DATE=$(date +"%d/%m/%Y")
+TIME=$(date +"%T")
+IPVPS=$(curl -s ipv4.icanhazip.com)
+DOMAIN=$(cat /etc/xray/domain 2>/dev/null || echo "Not set")
+DNS_NS="ns-${DOMAIN}"
+
+# --- จำนวนบัญชี (ดึงจากไฟล์หรือจัดการนับเอง) ---
+SSH_COUNT=$(grep -c -E "^### " /etc/xray/ssh 2>/dev/null || echo 0)
+VMESS_COUNT=$(grep -c -E "^### " /etc/xray/vmess 2>/dev/null || echo 0)
+VLESS_COUNT=$(grep -c -E "^### " /etc/xray/vless 2>/dev/null || echo 0)
+TROJAN_COUNT=$(grep -c -E "^### " /etc/xray/trojan 2>/dev/null || echo 0)
+SHADOW_COUNT=$(grep -c -E "^### " /etc/xray/shadowsocks 2>/dev/null || echo 0)
+
+# --- แสดงข้อมูลระบบ ---
+echo -e "               Script Mod By E2BOX"
+echo "================================================="
+echo -e "          ${BLUE}AUTO SCRIPT VPN SERVICE${NC}"
+echo "================================================="
+echo -e "${BLUE}System OS     ${NC}= $OS"
+echo -e "${BLUE}Server RAM    ${NC}= ${RAM_USED} / ${RAM_TOTAL} MB"
+echo -e "${BLUE}CPU           ${NC}= ${CPU_CORE} Core ($CPU_USAGE)"
+echo -e "${BLUE}Uptime Server ${NC}= $UPTIME"
+echo -e "${BLUE}Date          ${NC}= $DATE"
+echo -e "${BLUE}Time          ${NC}= $TIME"
+echo -e "${BLUE}DNSTT         ${NC}= $DNS_NS"
+echo -e "${BLUE}IP VPS        ${NC}= $IPVPS"
+echo -e "${BLUE}Domain        ${NC}= $DOMAIN"
+
+# --- Information Account ---
+echo "================================================="
+echo -e ">>> ${BLUE}INFORMATION ACCOUNT${NC} <<<"
+echo "┌───────────────────────────────────┐"
+echo -e "  ${BLUE}SSH/OPENVPN  ${NC}: $SSH_COUNT Account Premium"
+echo -e "  ${BLUE}VMESS        ${NC}: $VMESS_COUNT Account Premium"
+echo -e "  ${BLUE}VLESS        ${NC}: $VLESS_COUNT Account Premium"
+echo -e "  ${BLUE}TROJAN       ${NC}: $TROJAN_COUNT Account Premium"
+echo -e "  ${BLUE}SHADOWSOCKS  ${NC}: $SHADOW_COUNT Account Premium"
+echo "└───────────────────────────────────┘"
+
+# --- Status Server ---
+echo "================================================="
+echo -e ">>> ${BLUE}STATUS SERVER${NC} <<<"
+echo "┌───────────────────────────────┐"
+echo -e "  ${BLUE}SSH           ${NC}: $(check_status ssh)"
+echo -e "  ${BLUE}VMESS         ${NC}: $(check_status xray)"
+echo -e "  ${BLUE}VLESS         ${NC}: $(check_status xray)"
+echo -e "  ${BLUE}TROJAN        ${NC}: $(check_status xray)"
+echo -e "  ${BLUE}SHADOWSOCKS   ${NC}: $(check_status xray)"
+echo "└───────────────────────────────┘"
+
+# --- Main Menu ---
+echo "================================================="
+echo -e ">>> ${BLUE}MAIN MENU${NC} <<<"
+echo -e " [ 1 ] SSH & OpenVPN Menu"
+echo -e " [ 2 ] VMess Menu"
+echo -e " [ 3 ] VLess Menu"
+echo -e " [ 4 ] Trojan Menu"
+echo -e " [ 5 ] Shadowsocks Menu"
+echo "-------------------------------------------------"
+echo -e " [ 6 ] Backup & Restore"
+echo -e " [ 7 ] Check User Expired"
+echo -e " [ 8 ] Restart All Services"
+echo "-------------------------------------------------"
+echo -e " [ 9 ] CHECK BANDWIDTH"
+echo -e " [ 10 ] Speedtest Server"
+echo -e " [ 11 ] CHECK IP & PORT INFO"
+echo -e " [ 12 ] Show ALL PORT"
+echo -e " [ 13 ] SYSTEM SETTING"
+echo -e " [ 14 ] Exit"
+echo "================================================="
+read -rp "Select From Options [ 1 - 14 ] : " opt
